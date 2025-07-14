@@ -18,4 +18,9 @@ public static class Logger
         if (Options.Config.HideRefFixExceptions) return;
         Console.WriteLine($"[REF-FIX] Exception occured: {e}");
     }
+
+    public static void Error(string message)
+    {
+        Console.WriteLine($"[ERROR] {message}");
+    }
 }

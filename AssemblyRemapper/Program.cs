@@ -39,6 +39,18 @@ Logger.Log("Fixing references");
 ReferenceUpdater ru = new ReferenceUpdater(map, module);
 ru.Process();
 
+// Fix string references
+if (Options.Config.FixStringReferences && Options.Config.ObfuscatedRegex == "")
+{
+    Logger.Error("Cannot fix string references without obfuscated regex");
+}
+else if (Options.Config.FixStringReferences)
+{
+    Logger.Log("Fixing string references");
+    StringReferenceUpdater sru = new StringReferenceUpdater(map, module);
+    sru.Process();
+}
+
 // Write the deobfuscated module to disk
 Logger.Log("Writing deobfuscated assembly");
 module.Write(Options.Config.Output);

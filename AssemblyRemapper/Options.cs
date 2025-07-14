@@ -21,6 +21,9 @@ public class Options
     
     [Option("obfuscated-regex", Required = false, HelpText = "Regex for obfuscated symbol names. By default it matches all names (slow)", Default = "")]
     public string ObfuscatedRegex { get; set; }
+    
+    [Option("fix-string-references", Required = false, HelpText = "Fix string references", Default = true)]
+    public bool FixStringReferences { get; set; }
 
     public static Options Config = new Options();
 }

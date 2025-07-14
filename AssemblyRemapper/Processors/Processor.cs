@@ -7,7 +7,7 @@ public abstract class Processor(Dictionary<string, string> symbolMap, ModuleDefi
 {
     public abstract void Process();
     
-    private Regex? _obfuscatedRegex;
+    protected Regex? ObfuscatedRegex;
 
     /// <summary>
     /// Checks whether a symbol name matches the obfuscated regex provided
@@ -19,9 +19,9 @@ public abstract class Processor(Dictionary<string, string> symbolMap, ModuleDefi
     {
         if (Options.Config.ObfuscatedRegex == "") return true;
         
-        _obfuscatedRegex ??= new Regex(Options.Config.ObfuscatedRegex, RegexOptions.Compiled);
+        ObfuscatedRegex ??= new Regex(Options.Config.ObfuscatedRegex, RegexOptions.Compiled);
         
-        bool match = _obfuscatedRegex.IsMatch(name);
+        bool match = ObfuscatedRegex.IsMatch(name);
         Logger.Verbose(match ? $"{name} matches with obfuscated regex" : $"{name} doesn't match with obfuscated regex");
         
         return match;
