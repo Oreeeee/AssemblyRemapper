@@ -64,7 +64,7 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
             }
             catch (Exception e)
             {
-                Logger.Log($"Failed to fix reference (ignore this usually): {e}");
+                Logger.RefFixException(e);
             }
         }
     }

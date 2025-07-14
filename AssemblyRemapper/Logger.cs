@@ -12,4 +12,10 @@ public static class Logger
         if (!Options.Config.Verbose) return;
         Console.WriteLine($"[VERBOSE] {message}");
     }
+
+    public static void RefFixException(Exception e)
+    {
+        if (Options.Config.HideRefFixExceptions) return;
+        Console.WriteLine($"[REF-FIX] Exception occured: {e}");
+    }
 }
