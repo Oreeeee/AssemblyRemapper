@@ -1,24 +1,15 @@
 ﻿using Mono.Cecil;
 
-namespace AssemblyRemapper;
+namespace AssemblyRemapper.Processors;
 
-public class ModuleDeobfuscator
+public class ModuleDeobfuscator(Dictionary<string, string> symbolMap, ModuleDefinition module) : Processor(symbolMap, module)
 {
-    private Dictionary<string, string> SymbolMap;
-    private ModuleDefinition Module;
-
-    public ModuleDeobfuscator(Dictionary<string, string> symbolMap, ModuleDefinition module)
-    {
-        SymbolMap = symbolMap;
-        Module = module;
-    }
-
     /// <summary>
     /// Deobfuscates types, nested types, members, parameters in specified module based on a module map
     /// </summary>
-    public void Deobfuscate()
+    public override void Process()
     {
-        foreach (TypeDefinition type in Module.Types)
+        foreach (TypeDefinition type in module.Types)
         {
             Logger.Verbose($"Renaming type {type.FullName}");
             RenameType(type);
@@ -32,7 +23,7 @@ public class ModuleDeobfuscator
     /// <param name="isNested">Whether the type is nested</param>
     void RenameType(TypeDefinition type, bool isNested = false)
     {
-        if (!isNested && Utils.IsObfuscated(type.FullName))
+        if (!isNested && IsObfuscated(type.FullName))
         {
             // Non-nested types need to get full name (including namespace)
             string originalName = type.FullName;
@@ -55,7 +46,7 @@ public class ModuleDeobfuscator
                 Logger.Verbose($"Renamed type {type.FullName}");
             }
         }
-        else if (Utils.IsObfuscated(type.Name))
+        else if (IsObfuscated(type.Name))
         {
             // Nested types only need short name
             type.Name = GetName(type.Name);
@@ -77,7 +68,7 @@ public class ModuleDeobfuscator
         // Rename generic params in class
         foreach (GenericParameter genericParam in type.GenericParameters)
         {
-            if (!Utils.IsObfuscated(genericParam.Name)) continue;
+            if (!IsObfuscated(genericParam.Name)) continue;
             
             Logger.Verbose($"Renaming generic parameter {genericParam.Name}");
             genericParam.Name = GetName(genericParam.Name);
@@ -90,7 +81,7 @@ public class ModuleDeobfuscator
     /// <param name="member">Member to rename</param>
     void RenameMember(IMemberDefinition member)
     {
-        if (Utils.IsObfuscated(member.Name))
+        if (IsObfuscated(member.Name))
         {
             member.Name = GetName(member.Name);
             Logger.Verbose($"Renamed member {member.Name}");
@@ -101,7 +92,7 @@ public class ModuleDeobfuscator
             // Also rename parameters
             foreach (ParameterDefinition parameter in method.Parameters)
             {
-                if (!Utils.IsObfuscated(parameter.Name)) continue;
+                if (!IsObfuscated(parameter.Name)) continue;
                 
                 Logger.Verbose($"Renaming parameter {parameter.Name}");
                 parameter.Name = GetName(parameter.Name);
@@ -111,56 +102,11 @@ public class ModuleDeobfuscator
             // Rename generic params in method
             foreach (GenericParameter genericParam in method.GenericParameters)
             {
-                if (!Utils.IsObfuscated(genericParam.Name)) continue;
+                if (!IsObfuscated(genericParam.Name)) continue;
                 
                 Logger.Verbose($"Renaming generic parameter {genericParam.Name}");
                 genericParam.Name = GetName(genericParam.Name);
             }
         }
-    }
-    
-    /// <summary>
-    /// Yields all methods, fields, events, and properties in a type
-    /// </summary>
-    /// <param name="type">Target type</param>
-    /// <returns></returns>
-    IEnumerable<IMemberDefinition> GetMembers(TypeDefinition type)
-    {
-        foreach (var method in type.Methods)
-        {
-            yield return method;
-        }
-    
-        foreach (var field in type.Fields)
-        {
-            yield return field;
-        }
-    
-        foreach (var _event in type.Events)
-        {
-            yield return _event;
-        }
-    
-        foreach (var property in type.Properties)
-        {
-            yield return property;
-        }
-    }
-
-    /// <summary>
-    /// Gets name of an obfuscated symbol from the map
-    /// </summary>
-    /// <param name="obfuscatedName">Name to get</param>
-    /// <returns>Deobfuscated name if present, obfuscated name if not</returns>
-    string GetName(string obfuscatedName)
-    {
-        SymbolMap.TryGetValue(obfuscatedName, out var cleanName);
-        if (cleanName == null)
-        {
-            Logger.Verbose($"No name found for {obfuscatedName}");
-            return obfuscatedName;
-        }
-        Logger.Verbose($"Name {cleanName} would be renamed to {cleanName}");
-        return cleanName;
     }
 }

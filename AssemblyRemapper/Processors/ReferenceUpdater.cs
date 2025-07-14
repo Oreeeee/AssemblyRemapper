@@ -1,15 +1,12 @@
 ﻿using Mono.Cecil;
 
-namespace AssemblyRemapper;
+namespace AssemblyRemapper.Processors;
 
-public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefinition module)
+public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefinition module) : Processor(symbolMap, module)
 {
-    private Dictionary<string, string> SymbolMap = symbolMap;
-    private ModuleDefinition Module = module;
-
-    public void Process()
+    public override void Process()
     {
-        foreach (TypeDefinition type in Module.Types)
+        foreach (TypeDefinition type in module.Types)
         {
             Logger.Verbose($"Fixing references in type {type.FullName}");
             FixType(type);
@@ -35,7 +32,7 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
     {
         foreach (MethodReference methodOverride in method.Overrides)
         {
-            if (!Utils.IsObfuscated(methodOverride.Name)) continue;
+            if (!IsObfuscated(methodOverride.Name)) continue;
             methodOverride.Name = GetName(methodOverride.Name);
         }
         
@@ -57,7 +54,7 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
                         FixMethodReference(methodRef);
                         break;
                     case FieldReference fieldRef:
-                        if (!Utils.IsObfuscated(fieldRef.Name)) break;
+                        if (!IsObfuscated(fieldRef.Name)) break;
                         fieldRef.Name = GetName(fieldRef.Name);
                         break;
                 }
@@ -71,7 +68,7 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
 
     void FixMethodReference(MethodReference methodRef)
     {
-        if (Utils.IsObfuscated(methodRef.Name))
+        if (IsObfuscated(methodRef.Name))
             methodRef.Name = GetName(methodRef.Name);
         
         FixTypeReference(methodRef.DeclaringType);
@@ -79,7 +76,7 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
 
     void FixTypeReference(TypeReference typeRef)
     {
-        if (Utils.IsObfuscated(typeRef.FullName))
+        if (IsObfuscated(typeRef.FullName))
         {
             string originalName = typeRef.FullName;
             string cleanName = GetName(typeRef.FullName);
@@ -103,22 +100,5 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
         
         if (typeRef.DeclaringType != null)
             FixTypeReference(typeRef.DeclaringType);
-    }
-    
-    /// <summary>
-    /// Gets name of an obfuscated symbol from the map
-    /// </summary>
-    /// <param name="obfuscatedName">Name to get</param>
-    /// <returns>Deobfuscated name if present, obfuscated name if not</returns>
-    string GetName(string obfuscatedName)
-    {
-        SymbolMap.TryGetValue(obfuscatedName, out var cleanName);
-        if (cleanName == null)
-        {
-            Logger.Verbose($"No name found for {obfuscatedName}");
-            return obfuscatedName;
-        }
-        Logger.Verbose($"Name {cleanName} would be renamed to {cleanName}");
-        return cleanName;
     }
 }

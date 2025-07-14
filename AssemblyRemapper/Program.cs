@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using AssemblyRemapper;
+using AssemblyRemapper.Processors;
 using CommandLine;
 using Mono.Cecil;
 
@@ -31,7 +32,7 @@ ModuleDefinition module = ModuleDefinition.ReadModule(Options.Config.File, reade
 // Deobfuscate the module
 Logger.Log("Deobfuscating");
 ModuleDeobfuscator md = new ModuleDeobfuscator(map, module);
-md.Deobfuscate();
+md.Process();
 
 // Fix references
 Logger.Log("Fixing references");
