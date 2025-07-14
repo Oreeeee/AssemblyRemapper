@@ -52,7 +52,7 @@ public class StringReferenceUpdater(Dictionary<string, string> symbolMap, Module
 
                     if (instruction.OpCode == OpCodes.Ldstr)
                     {
-                        string str = instruction.Operand as string;
+                        string? str = instruction.Operand as string;
                         if (!string.IsNullOrEmpty(str) && Regex.IsMatch(str, Options.Config.ObfuscatedRegex))
                         {
                             string replacedStr = Regex.Replace(str, Options.Config.ObfuscatedRegex, match => GetName(match.ToString()));

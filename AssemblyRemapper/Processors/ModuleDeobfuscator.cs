@@ -2,14 +2,16 @@
 
 namespace AssemblyRemapper.Processors;
 
+/// <summary>
+/// Deobfuscates types, nested types, members, parameters in specified module based on a module map
+/// </summary>
 public class ModuleDeobfuscator(Dictionary<string, string> symbolMap, ModuleDefinition module) : Processor(symbolMap, module)
 {
-    /// <summary>
-    /// Deobfuscates types, nested types, members, parameters in specified module based on a module map
-    /// </summary>
+    private readonly ModuleDefinition _module = module;
+
     public override void Process()
     {
-        foreach (TypeDefinition type in module.Types)
+        foreach (TypeDefinition type in _module.Types)
         {
             Logger.Verbose($"Renaming type {type.FullName}");
             RenameType(type);
@@ -96,7 +98,6 @@ public class ModuleDeobfuscator(Dictionary<string, string> symbolMap, ModuleDefi
                 
                 Logger.Verbose($"Renaming parameter {parameter.Name}");
                 parameter.Name = GetName(parameter.Name);
-                //Logger.Verbose($"Renamed parameter {parameter.Name}");
             }
 
             // Rename generic params in method

@@ -2,11 +2,18 @@
 
 namespace AssemblyRemapper.Processors;
 
+/// <summary>
+/// Updates references in module
+/// </summary>
+/// <param name="symbolMap"></param>
+/// <param name="module"></param>
 public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefinition module) : Processor(symbolMap, module)
 {
+    private readonly ModuleDefinition _module = module;
+
     public override void Process()
     {
-        foreach (TypeDefinition type in module.Types)
+        foreach (TypeDefinition type in _module.Types)
         {
             Logger.Verbose($"Fixing references in type {type.FullName}");
             FixType(type);
