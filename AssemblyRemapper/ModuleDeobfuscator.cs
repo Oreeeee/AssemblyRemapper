@@ -73,6 +73,15 @@ public class ModuleDeobfuscator
             Logger.Verbose($"Renaming nested type {nestedType.Name}");
             RenameType(nestedType, true);
         }
+
+        // Rename generic params in class
+        foreach (GenericParameter genericParam in type.GenericParameters)
+        {
+            if (!Utils.IsObfuscated(genericParam.Name)) continue;
+            
+            Logger.Verbose($"Renaming generic parameter {genericParam.Name}");
+            genericParam.Name = GetName(genericParam.Name);
+        }
     }
     
     /// <summary>
@@ -96,7 +105,16 @@ public class ModuleDeobfuscator
                 
                 Logger.Verbose($"Renaming parameter {parameter.Name}");
                 parameter.Name = GetName(parameter.Name);
-                Logger.Verbose($"Renamed parameter {parameter.Name}");
+                //Logger.Verbose($"Renamed parameter {parameter.Name}");
+            }
+
+            // Rename generic params in method
+            foreach (GenericParameter genericParam in method.GenericParameters)
+            {
+                if (!Utils.IsObfuscated(genericParam.Name)) continue;
+                
+                Logger.Verbose($"Renaming generic parameter {genericParam.Name}");
+                genericParam.Name = GetName(genericParam.Name);
             }
         }
     }
