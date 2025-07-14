@@ -30,6 +30,11 @@ Logger.Log("Deobfuscating");
 ModuleDeobfuscator md = new ModuleDeobfuscator(map, module);
 md.Deobfuscate();
 
+// Fix references
+Logger.Log("Fixing references");
+ReferenceUpdater ru = new ReferenceUpdater(map, module);
+ru.Process();
+
 // Write the deobfuscated module to disk
 Logger.Log("Writing deobfuscated assembly");
 module.Write(Options.Config.Output);
