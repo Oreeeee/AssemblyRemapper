@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
+﻿using Mono.Cecil;
 
 namespace AssemblyRemapper;
 
@@ -21,8 +18,6 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
 
     void FixType(TypeDefinition type)
     {
-        //foreach (TypeReference reference in type.GetTypeRe)
-        
         foreach (MethodDefinition method in type.Methods)
         {
             Logger.Verbose($"Fixing references in method {method.FullName}");
@@ -40,6 +35,7 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
     {
         foreach (MethodReference methodOverride in method.Overrides)
         {
+            if (!Utils.IsObfuscated(methodOverride.Name)) continue;
             methodOverride.Name = GetName(methodOverride.Name);
         }
         
@@ -55,50 +51,16 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
                 switch (instruction.Operand)
                 {
                     case GenericInstanceMethod generic:
-                        //FixGenericInstanceMethod(instruction, generic);
-                        //generic.ElementMethod.Name = GetName(generic.ElementMethod.Name);
                         FixMethodReference(generic.ElementMethod);
                         break;
                     case MethodReference methodRef:
-                        //methodRef.Name = GetName(methodRef.Name);
                         FixMethodReference(methodRef);
                         break;
                     case FieldReference fieldRef:
+                        if (!Utils.IsObfuscated(fieldRef.Name)) break;
                         fieldRef.Name = GetName(fieldRef.Name);
                         break;
-                    // case TypeReference typeRef:
-                    //     typeRef.Name = GetName(typeRef.Name);
-                    //     break;
-                    // case MemberReference memberRef:
-                    //     memberRef.DeclaringType.Name = GetName(memberRef.Name);
-                    //     memberRef.Name = GetName(memberRef.Name);
-                    //     break;
                 }
-                
-                // if (instruction.Operand is MemberReference member)
-                // {
-                //     member.Name = GetName(member.Name);
-                // }
-                // if (instruction.Operand is MethodReference methodRef)
-                // {
-                //     methodRef.Name = GetName(methodRef.Name);
-                // }
-                // else if (instruction.Operand is TypeReference typeRef)
-                // {
-                //     typeRef.Name = GetName(typeRef.Name);
-                // }
-                // else if (instruction.Operand is FieldReference fieldRef)
-                // {
-                //     fieldRef.Name = GetName(fieldRef.Name);
-                // }
-                // else if (instruction.Operand is PropertyReference propertyRef)
-                // {
-                //     propertyRef.Name = GetName(propertyRef.Name);
-                // }
-                // else if (instruction.Operand is EventReference eventRef)
-                // {
-                //     eventRef.Name = GetName(eventRef.Name);
-                // }
             }
             catch (Exception e)
             {
@@ -109,32 +71,34 @@ public class ReferenceUpdater(Dictionary<string, string> symbolMap, ModuleDefini
 
     void FixMethodReference(MethodReference methodRef)
     {
-        methodRef.Name = GetName(methodRef.Name);
+        if (Utils.IsObfuscated(methodRef.Name))
+            methodRef.Name = GetName(methodRef.Name);
+        
         FixTypeReference(methodRef.DeclaringType);
     }
 
     void FixTypeReference(TypeReference typeRef)
     {
-        //typeRef.Name = GetName(typeRef.Name);
-        //typeRef.Namespace = GetName(typeRef.Name);
-        //typeRef.FullName = GetName(typeRef.FullName);
-        string originalName = typeRef.FullName;
-        string cleanName = GetName(typeRef.FullName);
-        if (originalName != cleanName)
+        if (Utils.IsObfuscated(typeRef.FullName))
         {
-            // We need to rename type (last index) and namespace (everything before last index) separately
-            var lastDotIndex = cleanName.LastIndexOf('.');
-            if (lastDotIndex >= 0)
+            string originalName = typeRef.FullName;
+            string cleanName = GetName(typeRef.FullName);
+            if (originalName != cleanName)
             {
-                typeRef.Namespace = cleanName.Substring(0, lastDotIndex);
-                typeRef.Name = cleanName.Substring(lastDotIndex + 1);
+                // We need to rename type (last index) and namespace (everything before last index) separately
+                var lastDotIndex = cleanName.LastIndexOf('.');
+                if (lastDotIndex >= 0)
+                {
+                    typeRef.Namespace = cleanName.Substring(0, lastDotIndex);
+                    typeRef.Name = cleanName.Substring(lastDotIndex + 1);
+                }
+                else
+                {
+                    typeRef.Namespace = string.Empty;
+                    typeRef.Name = cleanName;
+                }
+                Logger.Verbose($"Renamed typeRef {typeRef.FullName}");
             }
-            else
-            {
-                typeRef.Namespace = string.Empty;
-                typeRef.Name = cleanName;
-            }
-            Logger.Verbose($"Renamed typeRef {typeRef.FullName}");
         }
         
         if (typeRef.DeclaringType != null)

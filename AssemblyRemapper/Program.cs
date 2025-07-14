@@ -22,6 +22,9 @@ var resolver = new DefaultAssemblyResolver();
 resolver.AddSearchDirectory(Path.GetDirectoryName(Options.Config.File));
 var readerParameters = new ReaderParameters { AssemblyResolver = resolver };
 
+if (Options.Config.ObfuscatedRegex == "")
+    Logger.Log("Obfuscated regex not provided. It is recommended to provide one if the map file uses consistent obfuscated regex");
+
 Logger.Verbose("Loading assembly");
 ModuleDefinition module = ModuleDefinition.ReadModule(Options.Config.File, readerParameters); // Read module
 

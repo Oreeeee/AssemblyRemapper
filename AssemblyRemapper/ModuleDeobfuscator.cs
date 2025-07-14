@@ -32,7 +32,7 @@ public class ModuleDeobfuscator
     /// <param name="isNested">Whether the type is nested</param>
     void RenameType(TypeDefinition type, bool isNested = false)
     {
-        if (!isNested)
+        if (!isNested && Utils.IsObfuscated(type.FullName))
         {
             // Non-nested types need to get full name (including namespace)
             string originalName = type.FullName;
@@ -55,7 +55,7 @@ public class ModuleDeobfuscator
                 Logger.Verbose($"Renamed type {type.FullName}");
             }
         }
-        else
+        else if (Utils.IsObfuscated(type.Name))
         {
             // Nested types only need short name
             type.Name = GetName(type.Name);
@@ -81,14 +81,19 @@ public class ModuleDeobfuscator
     /// <param name="member">Member to rename</param>
     void RenameMember(IMemberDefinition member)
     {
-        member.Name = GetName(member.Name);
-        Logger.Verbose($"Renamed member {member.Name}");
-    
+        if (Utils.IsObfuscated(member.Name))
+        {
+            member.Name = GetName(member.Name);
+            Logger.Verbose($"Renamed member {member.Name}");
+        }
+        
         if (member is MethodDefinition method)
         {
             // Also rename parameters
             foreach (ParameterDefinition parameter in method.Parameters)
             {
+                if (!Utils.IsObfuscated(parameter.Name)) continue;
+                
                 Logger.Verbose($"Renaming parameter {parameter.Name}");
                 parameter.Name = GetName(parameter.Name);
                 Logger.Verbose($"Renamed parameter {parameter.Name}");

@@ -15,6 +15,9 @@ public class Options
 
     [Option("verbose", Required = false, HelpText = "Print verbose logs", Default = false)]
     public bool Verbose { get; set; }
+    
+    [Option("obfuscated-regex", Required = false, HelpText = "Regex for obfuscated symbol names. By default it matches all names (slow)", Default = "")]
+    public string ObfuscatedRegex { get; set; }
 
     public static Options Config = new Options();
 }
