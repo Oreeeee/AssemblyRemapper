@@ -5,6 +5,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Copyright>Licensed under the MIT license</Copyright>
     </PropertyGroup>
 
     <ItemGroup>
